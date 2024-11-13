@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'recipes.apps.RecipesConfig',
+    'recipes',
 ]
 
 MIDDLEWARE = [
@@ -78,8 +78,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
-        'USER': 'postgres',   
-        'PASSWORD': 'n9XLSLHx',   
+        'USER': 'murdo',
+        'PASSWORD': 'n9XLSLHx',
         'HOST': 'localhost',
         'PORT': '5432',
     }
