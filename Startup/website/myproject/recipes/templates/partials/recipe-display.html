@@ -1,0 +1,6 @@
+
+<h2>{{ title }} <span class="small-text">({{ total_yield }})</span></h2>
+<p>{% for ingredient in ingredients %}	° {{ ingredient.amount }} {{ ingredient.weight }} {{ ingredient.ingrediant_key }}  <span class="invisible_hover">({{ ingredient.text}})</span>
+	{% endfor %}</p>
+<p>{{ directions}}</p>
+

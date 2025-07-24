@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Search</title>
+    <style>
+        body {
+			background-color:black;
+            font-family: Arial, sans-serif;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 20px;
+			margin-left: 2%;
+			margin-right: 2%;
+  			border-radius: 25px;
+  			background: #4d0631;
+  			padding: 15px;
+        }
+
+        .search-bar {
+            display: flex;
+            flex-direction: column;
+			color: #f3af1cbe;
+            font-size: 18px;
+			text-align: center;
+			font: Garamond;
+        }
+
+        input[type="text"] {
+            padding: 5%;
+			background-color: #d7d7d7;
+            font-size: 16px;
+            margin-bottom: 5%;
+            margin-top: 5%;
+			border-radius: 25px;
+        }
+
+		.container {
+            display: flex;
+			align-items: center;
+            justify-content: space-between;
+            align-items: flex-start;
+			height: 75vh;
+			z-index: 0;
+			position: relative;
+        }
+
+		.search-results {
+            margin-top: -1.5%;
+			margin-left: 1.5%;
+			width: 100%;
+			z-index: 5;
+			position: absolute;
+        }
+
+		.search-results ul {
+  			border-radius: 5px;
+  			background: #4d0631;
+			color: #f3af1cbe;
+  			padding: 1%;
+		}
+		.search-result-list {
+			margin-bottom: 1%;
+			padding-bottom: 1%;
+			list-style: None;
+			border-bottom: dotted 0.5px #f3af1cbe;
+			cursor: pointer;
+		}
+
+		.search-result-list:hover{
+            padding: 0% 0.5%;
+            font-size: 16px;
+            cursor: pointer;
+			color: black;
+			border-radius: 10px;
+			background-color: #d7d7d7;
+			box-shadow: 0px 0px 1px 1px #d7d7d7;
+			border: solid 3px #4d0631;
+		}
+		.highlight {
+            padding: 0% 0.5%;
+            font-size: 16px;
+            cursor: pointer;
+			color: black;
+			border-radius: 10px;
+			background-color: #d7d7d7;
+			box-shadow: 0px 0px 1px 1px #d7d7d7;
+			border: solid 3px #4d0631;
+    	}
+
+		.recipe_buttons {
+			width: 25%;
+			margin-right: 3%;
+		}
+        .button-list {
+            display: flex;
+			height: 77vh;
+			scroll-behavior: smooth;
+			overflow-y: auto;
+			overflow-x: auto;
+            flex-direction: column;
+			border-radius: 10px;
+        }
+
+        .button-list button {
+            padding: 3% 2%;
+            font-size: 16px;
+            cursor: pointer;
+			margin-top: 6%;
+			border-radius: 10px;
+			background-color: #d7d7d7;
+			box-shadow: 0px 0px 1px 1px #d7d7d7;
+			border: solid 3px #4d0631;;
+        }
+
+		.recipe-display {
+            font-size: 16px;
+			display: inline;
+			width: 70%;
+			height: 98%;
+			margin-right: 3%;
+			padding: 1%;
+			background-color: 	#f4f4f4;
+			border-radius: 25px;
+			overflow-wrap: break-word;
+			white-space: pre-line;
+			border: dotted 4px #f3af1cbe;
+			box-shadow: 0px 0px 0px 1px #f4f4f4;
+			font-family: "Poppins", sans-serif;
+			scroll-behavior: smooth;
+			overflow-y: auto;
+			overflow-x: auto;
+		}
+
+		.recipe-display h2{
+			text-align: center;
+			margin: 0;
+		}
+		.recipe-display p {
+		    font-size: 1.1em;
+		    line-height: 1.6;
+		    color: #333;
+		    margin: 0;
+		    text-align: justify;
+		}
+
+
+		.tag_list {
+			width: 100%;
+			margin-left: -90px;
+			display: flex;
+			flex-direction: row;
+		}
+		.ingredient_tag_list {
+            margin-top: 12px;
+			width: 100%;
+			display: flex;
+			flex-direction: row;
+			z-index: 3;
+			position: absolute;
+		}
+		.yellow_space {
+			margin-left: 2%;
+			margin-right: 2%;
+            margin-bottom: 7px;
+            margin-top: 7px;
+            padding-top: 17px;
+            padding-bottom: 17px;
+			border-radius: 10px;
+			background-color: #4d0631;
+			border: dotted 1px #f3af1cbe;
+		}
+		.tag {
+			margin-left: 5px;
+			padding-left:5px;
+            font-size: 16px;
+			width: 250px;
+			text-overflow: ellipsis;
+			overflow: hidden;
+			white-space: nowrap;
+            cursor: pointer;
+			border-radius: 10px;
+			background-color: #d7d7d7;
+			box-shadow: 0px 0px 1px 1px #d7d7d7;
+			border: solid 3px #4d0631;
+		}
+		.not_found {
+			margin-top: 10%;
+			color: #f3af1cbe;
+            font-size: 18px;
+			font: Garamond;
+		}
+		.small-text {
+    		font-size: 0.7em;
+    		opacity: 0.8;
+		}
+		.invisible_hover{
+			opacity: 0;
+		}
+		.invisible_hover:hover{
+			opacity: 1;
+		}
+
+    </style>
+</head>
+<body>
+    <div class="search-container">
+        <div class="search-bar">
+            <label for="name-search">Name</label>
+    		<input type="text" id="search-input-1" class="search-input" placeholder="Search for a recipe...">
+        </div>
+
+        <div class="search-bar">
+            <label for="ingredient-search">Ingredients</label>
+            <input type="text" id="search-input-2" class="search-input" placeholder="Enter ingredients">
+        </div>
+
+        <div class="search-bar">
+            <label for="season-search">Season</label>
+            <input type="text" id="search-input-3" class="search-input" placeholder="Enter season (e.g., summer)">
+        </div>
+
+        <div class="search-bar">
+            <label for="geography-search">Geography</label>
+            <input type="text" id="search-input-4" class="search-input" placeholder="Enter geography (e.g., Italian)">
+        </div>
+		<div class="recipes" id="recipes"></div>
+    </div>
+	<div class="ingredients" id="ingredients"></div>
+	<div class="yellow_space" id="yellow_space"></div>
+	<div class="search-results" id="search-results"></div>
+	<div class="container">
+		<div class="recipe_buttons" id="recipe_buttons"></div>
+		<div class="recipe-display" id="recipe-display"></div>
+	</div>
+</body>
+</html>
+
+<!-- Include jQuery for AJAX (optional if already included) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+		let recipe = {"title": [], "ingredients": [], "season": [], "geography": []}
+		handleSelection();
+		selectedIndex = -1;
+        $('.search-input').on('input', function() {
+            const query = $(this).val();  // Get the current input value
+            // Perform AJAX GET request
+            $.ajax({
+                url: '/search/',  // URL of the search view
+                data: {
+                    'query': query,
+					'searchbarID': $(this).attr('id')
+
+                },
+                success: function(data) {
+                    $('#search-results').html(data);
+					selectedIndex = -1;
+                }
+            });
+        });
+
+
+              // Handle keydown events for navigation
+		$('.search-input').on('keydown', function(e) {
+
+            const results = $('.search-result-list');
+            if (results.length === 0) {
+
+                return; // Do nothing if there are no results
+            }
+
+            if (e.key === 'ArrowDown') {
+                // Move down to the next result
+                if (selectedIndex < results.length - 1) {
+                    selectedIndex++;
+                }
+            } else if (e.key === 'ArrowUp') {
+                // Move up to the previous result
+                if (selectedIndex > 0) {
+                    selectedIndex--;
+                }
+            } else if (e.key === 'Enter') {
+                // Select the currently highlighted result
+                if (selectedIndex >= 0 && selectedIndex < results.length) {
+                    const result = results.eq(selectedIndex);
+					const type = result.find('span').text();
+					const newItem = result.find('strong').text()
+            		if (recipe[type].indexOf(newItem) == -1) { recipe[type].push(newItem);}
+            		handleSelection();
+                }
+            }
+
+            // Remove highlight from all results, then add it to the selected one
+            results.removeClass('highlight');
+            if (selectedIndex >= 0 && selectedIndex < results.length) {
+                results.eq(selectedIndex).addClass('highlight');
+            }
+
+        });
+
+        $(document).on('click', '.search-result-list', function() {
+			const type = $(this).find('span').text();
+			const newItem = $(this).find('strong').text()
+            if (recipe[type].indexOf(newItem) == -1) { recipe[type].push(newItem);}
+            handleSelection();
+        });
+
+		function handleSelection() {
+			$('.search-input').val('');
+            $.ajax({
+                url: '/ingredients/',  // URL of the partial
+                data: {
+					"tag": JSON.stringify(recipe["ingredients"]),
+                },
+                success: function(data) {
+                    $('#ingredients').html(data);
+                }
+            });
+            $.ajax({
+                url: '/recipes/',  // URL of the partial
+                data: {
+					"tag": JSON.stringify(recipe),
+                },
+                success: function(data) {
+                    $('#recipes').html(data);
+                }
+            });
+            $.ajax({
+                url: '/recipe_buttons/',  // URL of the partial
+                data: {
+					"tag": JSON.stringify(recipe),
+                },
+                success: function(data) {
+                    $('#recipe_buttons').html(data);
+                }
+            });
+			$('#search-results').html('');
+    	}
+
+        $(document).on('click', '.tag', function() {
+			const type = $(this).find('span').text();
+			const index_Item_to_Delete = recipe[type].indexOf($(this).find('strong').text())
+            recipe[type].splice(index_Item_to_Delete, 1);
+            handleSelection();
+        });
+
+		$(document).on('click', function() {
+			$('#search-results').html('');
+			$('.search-input').val('');
+		});
+    });
+
+
+	document.addEventListener("DOMContentLoaded", function () {
+	    // Attach the click listener to the parent (ul)
+	    const buttonList = document.querySelector(".recipe_buttons");
+
+	    buttonList.addEventListener("click", function(event) {
+	        // Check if the clicked element is a button with the class 'recipe-button'
+	        if (event.target && event.target.matches("button")) {
+
+	            const recipe = {
+	                title: event.target.getAttribute("data-title"),
+	                ingredients: event.target.getAttribute("data-ingredients"),
+	                directions: event.target.getAttribute("data-directions"),
+	                total_yield: event.target.getAttribute("data-total_yield"),
+	            };
+
+        		$.ajax({
+        		    url: '/recipe-display/',
+        		    data: {
+						"recipe": JSON.stringify(recipe),
+        		    },
+        		    success: function(data) {
+        		        $('#recipe-display').html(data);
+        		    }
+        		});
+	        }
+	    });
+	});
+
+</script>

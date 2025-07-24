@@ -1,0 +1,31 @@
+{% if show %}
+	{% if type == 'title' %}
+		<ul style="width: 600px; margin-left: 20px;">
+	    	{% for recipe in results %}
+	        	<li class="search-result-list"><strong>{{ recipe }}</strong>
+				<span style="display:none">{{ type }}</span></li>
+	    	{% endfor %}
+	{% elif type == 'ingredients' %}
+		<ul style="width: 185px; margin-left: 270px;">
+			{% for Ingredient in results %}
+				<li class="search-result-list"><strong>{{ Ingredient }}</strong>
+				<span style="display:none">{{ type }}</span></li>
+			{% endfor %}
+	{% elif type == 'season' %}
+		<ul style="width: 210px; margin-left: 510px;">
+			{% for recipe in results %}
+				<li class="search-result-list"><strong>{{ recipe }}</strong>
+				<span style="display:none">{{ type }}</span></li>
+			{% endfor %}
+	{% elif type == 'geography' %}
+		<ul style="width: 400px; margin-left: 755px;">
+			{% for recipe in results %}
+				<li class="search-result-list"><strong>{{ recipe }}</strong>
+				<span style="display:none">{{ type }}</span></li>
+			{% endfor %}
+	{% endif %}
+	{% if show == 2 %}
+		<p>No results found.</p>
+	{% endif %}
+</ul>
+{% endif %}

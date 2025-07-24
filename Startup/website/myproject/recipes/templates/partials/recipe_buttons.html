@@ -1,0 +1,17 @@
+{% if recipes %}
+<ul class="button-list">
+	{% for recipe in recipes %}
+		<button class="button_for_recipe"
+			data-title="{{ recipe.title }}"
+			data-ingredients="{{ recipe.ingredients }}"
+			data-directions="{{ recipe.directions }}"
+			data-total_yield="{{ recipe.total_yield }}">
+			{{ recipe.title }}
+		</button>
+	{% endfor %}
+</ul>
+
+{% else %}
+<div class="not_found"> no recipes with these tags </div>
+{% endif %}
+
