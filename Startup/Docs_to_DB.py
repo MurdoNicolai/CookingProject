@@ -65,7 +65,7 @@ def organise_file(organise_file_list, service, current_folder_id, path = "/", ex
             if file['mimeType'] == "application/vnd.google-apps.folder":
                 if file['id'] not in ["1bwfPxsj64eJci9nGFmqxb73421B3Yse2", "1RxbtxvCGETDJcwv1YKXmY5DJ0FoLcJL-"] : #ids of the folders we ignore: core, condiment
                     organise_file_list = organise_file(organise_file_list, service, file['id'], path + file['name'] + "/", example_file)
-            elif example_file and file['id'] != "1695kRv72ThqhOzKKaX1190kZZYMzUIpZMu8EtQxO2xU": #use to get specifique file qhile testing
+            elif example_file and file['id'] != "1EEFwn3mUjXrEAI9zi5s9UGP2qaT-YcIP-oRypJUN9gM": #use to get specifique file while testing
                 pass
             elif file['mimeType'] == "application/vnd.google-apps.document":
                 organise_file_list.append((path, file))
@@ -104,33 +104,96 @@ def get_all_ingredients():
     return ingredients + Flavor_bombs
 
 
-def get_amount(line, ingrediant_key, weight_dict, recepi_warnings):
+def get_amount(line, ingrediant_found, UnitsOM_dict, recepi_warnings):
     """
     Returns the amount of ingredient in the given line.
     If no amount is found, returns None.
     """
-    # get weight type
-    line_split = line.lower().split()
-    amount = 0
-    weight = None
-    extra_info = None
-    for w in range(len(line_split)):
-        word = line_split[w]
-        # print(word) #debugging
-    print(weight)
-    if amount == 0:
-        amount = 0.0
+    UnitOM = "None"
+    #use dictionary to find the unit of measurement
 
-    return None
-def get_amount_ingrediant(line, weight_dict, ingrediant_list, recepi_errors = [], recepi_warnings = []):
+    line_lower = line.lower()
+    UnitOM = ""
+    for key, values in UnitsOM_dict.items():
+        for unit in values:
+            # Match the unit as a whole word, allowing for an optional trailing 's'
+            pattern = r'\b' + re.escape(unit) + r's?\b'
+            if re.search(pattern, line_lower):
+                UnitOM = key
+                break
+        if UnitOM != "":
+            break
+    # get ingrediant_found AI
+    model_name = "./flan-t5-large"
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+
+    prompt = f"What is the correct unit of measurement of {ingrediant_found} in the following line: {line}?"
+    inputs = tokenizer(
+        prompt,
+        return_tensors="pt",
+        truncation=True,
+        max_length= 200
+    )
+
+    outputs = model.generate(**inputs, max_new_tokens=10)
+
+    ai_Unit = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+
+    prompt = f"In the following line: {line}. How many {ai_Unit} {ingrediant_found} ? (answer with a number when possible)\n"
+    inputs = tokenizer(
+        prompt,
+        return_tensors="pt",
+        truncation=True,
+        max_length= 200
+    )
+
+    outputs = model.generate(**inputs, max_new_tokens=10)
+
+    amount = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+
+    prompt = f"There are {amount} {UnitOM} {ingrediant_found} in the following line? \n {line} \n (answer with yes or no)"
+    inputs = tokenizer(
+        prompt,
+        return_tensors="pt",
+        truncation=True,
+        max_length= 200
+    )
+
+    outputs = model.generate(**inputs, max_new_tokens=10)
+
+    ai_responce = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+    if ai_responce.lower() == "no":
+        prompt = f"There are {amount} {UnitOM} {ingrediant_found} in the following line? \n {line} \n (answer with yes or no)"
+        inputs = tokenizer(
+            prompt,
+            return_tensors="pt",
+            truncation=True,
+            max_length= 200
+        )
+
+        outputs = model.generate(**inputs, max_new_tokens=10)
+
+        ai_responce = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        if ai_responce.lower() == "no":
+            recepi_warnings.append(f"unrecognised amount in {line}")
+            print(f"unrecognised amount in {line}")
+            return None, None
+    else:
+        UnitOM = ai_Unit
+    return amount, UnitOM
+def get_amount_ingrediant(line, UnitsOM_dict, ingrediant_list, recepi_errors = [], recepi_warnings = []):
     """
-    Returns the (ingredient_key, amount, weight) that was found in give line
+    Returns the (ingredient_key, amount, UnitsOM) that was found in give line
     """
     line_lower = remove_accents(line.lower().translate(str.maketrans("", "", string.punctuation)))
     if line_lower.startswith('for the'):
         return 0
 
-    # get ingrediant_key
+    # get ingrediant_found
     model_name = "./flan-t5-large"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
@@ -143,9 +206,9 @@ def get_amount_ingrediant(line, weight_dict, ingrediant_list, recepi_errors = []
         max_length= 300
     )
     outputs = model.generate(**inputs, max_new_tokens=10)
-    ingrediant_key = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    ingrediant_found = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-    if len(ingrediant_key) >35:
+    if len(ingrediant_found) >35:
         prompt = f"Find and extract the ingredient from the following line: \n{line}"
         inputs = tokenizer(
             prompt,
@@ -154,24 +217,16 @@ def get_amount_ingrediant(line, weight_dict, ingrediant_list, recepi_errors = []
             max_length= 300
         )
         outputs = model.generate(**inputs, max_new_tokens=10)
-        ingrediant_key = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        ingrediant_found = tokenizer.decode(outputs[0], skip_special_tokens=True)
     print(f"line: {line}") #debugging
 
-    print(f"ingrediant_key_AI: {ingrediant_key}") #debugging
-
-    prompt = f"What amount of {ingrediant_key} is in the folowing line: \n{line}"
-    inputs = tokenizer(
-        prompt,
-        return_tensors="pt",
-        truncation=True,
-        max_length= 200
-    )
-    outputs = model.generate(**inputs, max_new_tokens=10)
-    amount = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    print(f"ingrediant_amount_AI: {amount}") #debugging
-    weight = "none"
-    get_amount(amount, ingrediant_key, weight_dict, recepi_warnings)
-    return (ingrediant_key, amount, weight)
+    amount = None
+    UnitsOM = "none"
+    amount, UnitsOM = get_amount(line, ingrediant_found, UnitsOM_dict, recepi_warnings)
+    if UnitsOM is None or UnitsOM in ingrediant_found:
+        UnitsOM = ""
+    print(f"{amount} {UnitsOM} {ingrediant_found}") #debugging
+    return (ingrediant_found, amount, UnitsOM)
 
 def split_file_info(service, file, mimeType, ingrediant_list, errorlist, recepi_warnings):
     """
@@ -199,7 +254,7 @@ def split_file_info(service, file, mimeType, ingrediant_list, errorlist, recepi_
 
 
     #treat the text
-    weight_dict = { #list of measures for ingrediant amounts
+    UnitsOM_dict = { #list of measures for ingrediant amounts
     'tablespoon' : ['tablespoon','tbsp' ],
     'teaspoon' : ['teaspoon', 'ts', 'tsp', 't'],
     'large': ['large'] ,
@@ -211,15 +266,18 @@ def split_file_info(service, file, mimeType, ingrediant_list, errorlist, recepi_
     'handfull' : ['handfull' ],
     'ounce': ['ounce','oz'] ,
     'quart': ['quart','qt'],
-    'gramme' : ['gramme', 'g'],
+    'gramme' : ['gramme', 'g', 'gram'],
     'slice': ['slice'] ,
     'pound': ['pound','lb'] ,
-    'milliliters': ['milliliters','ml'] ,
-    'centiliters': ['centiliters','cl'] ,
+    'milliliter': ['milliliter','ml'] ,
+    'centiliter': ['centiliter','cl'] ,
     'deciliter': ['deciliter','dl'] ,
-    'liter': ['liter', 'l'],
+    'litre': ['liter', 'litre', 'l'],
     'package': ['package'],
-    'slice': ['slice'] ,
+    'segment': ['segment'],
+    'piece': ['piece'],
+    'pinch': ['pinch'],
+    'slice': ['slice'],
     'stalk' : ['stalk'],
     'clove' : ['clove'],
     'bunch' : ['bunch'],
@@ -296,14 +354,14 @@ def split_file_info(service, file, mimeType, ingrediant_list, errorlist, recepi_
         elif line_key == "Ingredients":
             if line.strip() == '':
                 continue
-            ingrediant_key = None
+            ingrediant_found = None
 
-            amount_ingredient = get_amount_ingrediant(line, weight_dict, ingrediant_list, recepi_errors, recepi_warnings)
+            amount_ingredient = get_amount_ingrediant(line, UnitsOM_dict, ingrediant_list, recepi_errors, recepi_warnings)
             if amount_ingredient == 0:
                 continue
             else:
-                ingrediant_key, amount,  weight = amount_ingredient
-            split_file_dict["Ingredients"].append({"ingrediant_key" : ingrediant_key, "amount" : amount, "weight" : weight, "text" : line})
+                ingrediant_found, amount,  UnitsOM = amount_ingredient
+            split_file_dict["Ingredients"].append({"ingrediant_found" : ingrediant_found, "amount" : amount, "UnitsOM" : UnitsOM, "text" : line})
         elif split_file_dict[line_key] is None:
             split_file_dict[line_key] = line
         elif line != "":
@@ -318,7 +376,7 @@ def split_file_info(service, file, mimeType, ingrediant_list, errorlist, recepi_
     errorlist.append(recepi_errors)
     return(None)
 
-def get_unlisted_ingrediants(service, file_id, mimeType, ingrediant_list, file_sections = None, weight_types = None):
+def get_unlisted_ingrediants(service, file_id, mimeType, ingrediant_list, file_sections = None, UnitsOM_types = None):
     """
     gets ingrediants not listed in all ingrediants name that are present in recepies
     file_id - id of the file in google drive
@@ -362,13 +420,13 @@ def get_unlisted_ingrediants(service, file_id, mimeType, ingrediant_list, file_s
             entry = entry.lower()
             if all(ingrediant not in entry for ingrediant in ingrediant_list):
                 new_ingrediants.append(entry)
-            weight_type = None
+            UnitsOM_type = None
             for word in entry.split():
                 if not word.isdigit() and word != "*":
-                    weight_type = word
+                    UnitsOM_type = word
                     break
-            if weight_types is not None and (weight_type not in weight_types):
-                weight_types.append(weight_type)
+            if UnitsOM_types is not None and (UnitsOM_type not in UnitsOM_types):
+                UnitsOM_types.append(UnitsOM_type)
     return new_ingrediants
 # Define the scopes
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
@@ -427,7 +485,7 @@ all_files = organise_file(organised_file_list_for_db, service, folder_id, exampl
 unlisted_ingrediants = []
 ingrediant_list = get_all_ingredients()
 file_sections = []
-weight_types = []
+UnitsOM_types = []
 errorlist = []
 recepi_warnings = []
 
@@ -436,7 +494,7 @@ for file in all_files:
     name = file[1]['name']
     mimeType = file[1]['mimeType']
     #use to get unlisted ingrediants
-    # unlisted_ingrediants.extend(get_unlisted_ingrediants(service, file_id, mimeType, ingrediant_list, file_sections, weight_types))
+    # unlisted_ingrediants.extend(get_unlisted_ingrediants(service, file_id, mimeType, ingrediant_list, file_sections, UnitsOM_types))
 
     file_info = split_file_info(service, file, mimeType, ingrediant_list, errorlist, recepi_warnings) #this is None if there was an error
 
@@ -492,9 +550,9 @@ if file_sections != []:
             except:
                 print(item)
 
-if weight_types != []:
-    with open("weight_types.txt", 'w') as file:
-        for item in weight_types:
+if UnitsOM_types != []:
+    with open("UnitsOM_types.txt", 'w') as file:
+        for item in UnitsOM_types:
             try:
                 file.write(f"{item}\n")
             except:
