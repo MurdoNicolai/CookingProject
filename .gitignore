@@ -3,3 +3,4 @@
 
 # Ignore all JSON files in the root/Startup folder
 /Startup/*.json
+/Startup/ask_chatgpt.py

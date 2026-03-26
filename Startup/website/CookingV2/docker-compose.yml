@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: murdo
+      POSTGRES_PASSWORD: n9XLSLHx
+    ports:
+      - "5433:5432"
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 5s
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["daphne", "-b", "0.0.0.0", "-p", "8000", "CookingV2.asgi:application"]
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DEBUG: "1"
+      DATABASE_URL: postgresql://murdo:n9XLSLHx@db:5432/postgres
+    depends_on:
+      - db
+    init: true
+    stop_signal: SIGINT
+    stop_grace_period: 5s
+    restart: unless-stopped
+
+  tailwind:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python manage.py tailwind start
+    volumes:
+      - .:/app
+    environment:
+      DEBUG: "1"
+      DATABASE_URL: postgresql://murdo:n9XLSLHx@db:5432/postgres
+    depends_on:
+      - db
+    init: true
+    stop_signal: SIGINT
+    stop_grace_period: 5s
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
