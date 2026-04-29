@@ -6,3 +6,5 @@
 /Startup/ask_chatgpt.py
 __pycache__/
 *.pyc
+__pycache__/
+*.pyc
