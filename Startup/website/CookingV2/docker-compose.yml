@@ -35,21 +35,11 @@ services:
     restart: unless-stopped
 
   tailwind:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: python manage.py tailwind start
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && while true; do npx @tailwindcss/cli -i ./theme/static_src/src/styles.css -o ./theme/static/css/dist/styles.css; sleep 2; done"
     volumes:
       - .:/app
-    environment:
-      DEBUG: "1"
-      DATABASE_URL: postgresql://murdo:n9XLSLHx@db:5432/postgres
-    depends_on:
-      - db
-    init: true
-    stop_signal: SIGINT
-    stop_grace_period: 5s
-    restart: unless-stopped
 
 volumes:
   postgres_data:

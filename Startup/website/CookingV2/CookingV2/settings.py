@@ -39,9 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'channels',
     'reactpy_django',
-    'tailwind',
     'Home',
-    'theme',
 ]
 
 MIDDLEWARE = [
@@ -122,13 +120,10 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = []
+STATICFILES_DIRS = [
+    BASE_DIR / "theme" / "static",
+]
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-TAILWIND_APP_NAME = 'theme'
-TAILWIND_CSS_VERSION = "3.4.13"
-INTERNAL_IPS = [
-    "127.0.0.1",
-]

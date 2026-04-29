@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Niconne&display=swap');
+
 
 /**
   * A catch-all path to Django template files, JavaScript, and Python files
@@ -13,5 +15,7 @@
   --color-beige-50: oklch(97.79% 0.0328 101.38);
   --color-beige-100: oklch(96.1% 0.0358 98.41);
   --color-custom-teal-200: oklch(94.96% 0.0283 180.27);
-
+  --color-greyline-100: oklch(77.52% 0.0171 278.43);
+  --font-niconne: 'Niconne', cursive;
 }
+

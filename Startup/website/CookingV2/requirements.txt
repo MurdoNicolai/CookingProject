@@ -4,4 +4,3 @@ gunicorn>=21.0
 python-dotenv>=1.0
 reactpy-django
 channels[daphne]
-django-tailwind>=4.2.0
